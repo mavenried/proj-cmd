@@ -1,3 +1,4 @@
+# proj-cmd initializaton for bash and zsh
 proj() {
   array=("goto" "create" "make")
 
@@ -11,5 +12,4 @@ proj() {
   else
     proj-cmd $@
   fi
-
 }

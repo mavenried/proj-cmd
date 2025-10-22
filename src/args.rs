@@ -2,7 +2,7 @@ use clap::{Args, Parser, Subcommand};
 
 #[derive(Debug, Parser)]
 #[command(author = "Joseph Chacko <josephchacko2006@gmail.com>")]
-#[command(version = "0.1.2")]
+#[command(version = "0.1.4")]
 #[command(
     help_template = "{name} v{version}\n{author-section} {about-section}\n{usage-heading} {usage} \n\n{all-args}"
 )]

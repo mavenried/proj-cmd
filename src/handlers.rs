@@ -11,26 +11,22 @@ fn get_dir_contents(path: &str) -> Result<Vec<String>, std::io::Error> {
     match fs::read_dir(path) {
         Ok(entries) => {
             let mut names = Vec::new();
-            for entry in entries {
-                if let Ok(dir) = entry {
-                    if dir.path().is_dir() {
-                        let name_to_print = dir.file_name();
-                        names.push(name_to_print.into_string().unwrap());
-                    }
+            for dir in entries.flatten() {
+                if dir.path().is_dir() {
+                    let name_to_print = dir.file_name();
+                    names.push(name_to_print.into_string().unwrap());
                 }
             }
-            return Ok(names);
+            Ok(names)
         }
-        Err(e) => {
-            return Err(e);
-        }
+        Err(e) => Err(e),
     }
 }
 
 fn search(names_in: Vec<String>, target: &String) -> String {
     let mut names = names_in.clone();
-    if names.contains(&target) {
-        return target.clone();
+    if names.contains(target) {
+        target.clone()
     } else {
         let mut found = false;
         let mut index = 1;
@@ -38,15 +34,12 @@ fn search(names_in: Vec<String>, target: &String) -> String {
             let mut searchlist: Vec<String> = Vec::new();
             let searchstr = &target[..index];
             for name in &names {
-                if name.len() > index {
-                    if &name[..index] == searchstr {
-                        searchlist.push(name.clone());
-                    }
+                if name.len() > index && &name[..index] == searchstr {
+                    searchlist.push(name.clone());
                 }
             }
-            //             println!("{:?}", &searchlist);
 
-            if searchlist.len() == 0 {
+            if searchlist.is_empty() {
                 break;
             }
 
@@ -74,8 +67,8 @@ pub fn handle_goto(projpath: String, goto: GotoProj) {
         let path = format!("{}/{}", projpath, goto.proj_group);
         let names = get_dir_contents(path.as_str()).unwrap();
         let out = search(names, &project);
-        if out == "" {
-            println!("Error: Proj group could not be found! : {}", project);
+        if out.is_empty() {
+            println!("Error: Proj group could not be found! : {project}");
             exit(1);
         } else if out == "INSUFFICENT" {
             println!("Error: More than 1 match exists! (add more letters)");
@@ -86,14 +79,14 @@ pub fn handle_goto(projpath: String, goto: GotoProj) {
     } else {
         let names = get_dir_contents(projpath.as_str()).unwrap();
         let out = search(names, &goto.proj_group);
-        if out == "" {
+        if out.is_empty() {
             println!(
                 "Error: Proj group could not be found! : {}",
                 goto.proj_group
             );
             exit(1);
         } else {
-            println!("x cd \"{}/{}\"", projpath, out);
+            println!("x cd \"{projpath}/{out}\"");
         }
     }
 }
@@ -107,7 +100,7 @@ pub fn handle_list(projpath: String, list: ListProj) {
         path = Path::new(&projpath).join("");
     } else {
         chr = '󰆧';
-        path = Path::new(&projpath).join(&proj_to_list.unwrap());
+        path = Path::new(&projpath).join(proj_to_list.unwrap());
     }
 
     let mut maxlen = 10;
@@ -120,23 +113,21 @@ pub fn handle_list(projpath: String, list: ListProj) {
     match fs::read_dir(&path) {
         Ok(entries) => {
             let mut names = Vec::new();
-            for entry in entries {
-                if let Ok(dir) = entry {
-                    if dir.path().is_dir() {
-                        let name_to_print = dir.file_name();
-                        names.push(name_to_print);
-                    }
+            for dir in entries.flatten() {
+                if dir.path().is_dir() {
+                    let name_to_print = dir.file_name();
+                    names.push(name_to_print);
                 }
             }
 
             let bot = format!("╰{}╯", "─".repeat(maxlen + 4));
             let top = format!("╭{}╮", "─".repeat(maxlen + 4));
 
-            println!("{}", top);
+            println!("{top}");
             for name in names {
                 println!("│ {chr} {:<maxlen$} │", name.to_str().unwrap());
             }
-            println!("{}", bot);
+            println!("{bot}");
         }
         Err(_e) => {
             println!("Error: Proj group or project does not exist");
@@ -210,54 +201,18 @@ pub fn handle_setup(setup: SetupProj) {
 }
 
 pub fn handle_init(init: Shell) {
-    let cmd = init.cmd.unwrap_or(String::from("proj"));
-
     match init.shell.as_str() {
         "zsh" | "bash" => {
-            println!(
-                "
-{cmd}() {{
-  returned=$(proj-cmd $@)
-  if [[ $returned == x\\ * ]]; then
-    eval ${{returned:2}}
-  else
-    echo $returned
-  fi
-}}
-"
-            )
+            println!("{}", include_str!("../shell-scripts/proj.sh"))
         }
         "fish" => {
-            println!(
-                "
-function {cmd}
-    set returned (proj-cmd $argv)
-    if string match -qr '^x\\ ' $returned
-        eval (string sub -s 3 $returned)
-    else
-        echo $returned
-    end
-end
-"
-            )
+            println!("{}", include_str!("../shell-scripts/proj-nu.sh"))
         }
         "nu" => {
-            println!(
-                "
-def --env {cmd} [ ...args ] {{
-    let returned = (proj-cmd ...$args)
-
-    if ($returned | str starts-with \"x \") {{
-        cd $returned  
-    }} else {{
-        echo $returned
-    }}
-}}
-"
-            )
+            println!("{}", include_str!("../shell-scripts/proj-fish.sh"))
         }
         _ => {
-            println!("Error: Only zsh, bash, nu and fish are supported currently :( ");
+            eprintln!("Error: Only zsh, bash, nu and fish are supported currently :( ");
             exit(1)
         }
     }

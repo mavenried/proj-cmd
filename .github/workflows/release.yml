@@ -1,0 +1,56 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            pretty: linux-x86_64
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            pretty: macos-x86_64
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            pretty: macos-arm64
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Build
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Package binary
+        run: |
+          BIN_NAME=colorctl
+          TARGET=${{ matrix.target }}
+          PRETTY=${{ matrix.pretty }}
+          OUT_DIR=dist
+          mkdir -p $OUT_DIR
+          cp target/$TARGET/release/$BIN_NAME $OUT_DIR/
+          tar -czf $OUT_DIR/${BIN_NAME}-${PRETTY}.tar.gz -C $OUT_DIR $BIN_NAME
+          rm $OUT_DIR/$BIN_NAME
+
+      - name: Upload release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.tar.gz
+          overwrite: true
+          append_body: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

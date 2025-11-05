@@ -201,15 +201,30 @@ pub fn handle_setup(setup: SetupProj) {
 }
 
 pub fn handle_init(init: Shell) {
+    let cmd = if init.cmd.is_none() {
+        "proj"
+    } else {
+        &init.cmd.unwrap()
+    };
+
     match init.shell.as_str() {
         "zsh" | "bash" => {
-            println!("{}", include_str!("../shell-scripts/proj.sh"))
+            println!(
+                "{}",
+                include_str!("../shell-scripts/proj.sh").replace("name", cmd)
+            )
         }
         "fish" => {
-            println!("{}", include_str!("../shell-scripts/proj-nu.sh"))
+            println!(
+                "{}",
+                include_str!("../shell-scripts/proj-fish.fish").replace("name", cmd)
+            )
         }
         "nu" => {
-            println!("{}", include_str!("../shell-scripts/proj-fish.sh"))
+            println!(
+                "{}",
+                include_str!("../shell-scripts/proj-nu.nu").replace("name", cmd)
+            )
         }
         _ => {
             eprintln!("Error: Only zsh, bash, nu and fish are supported currently :( ");

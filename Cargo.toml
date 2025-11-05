@@ -1,13 +1,13 @@
 [package]
 name = "proj-cmd"
-version = "0.1.4"
+version = "0.1.5"
 edition = "2021" 
 authors = ["Joseph Chacko <josephchacko2006@gmail.com>"]
 license = "MIT OR Apache-2.0"
-description = "Project organization tool made for learning rust"
+description = "Project organization tool"
 readme = "README.md"
-homepage = "https://github.com/maverik-io"
-repository = "https://github.com/maverik-io/proj-cmd"
+homepage = "https://github.com/mavenried"
+repository = "https://github.com/mavenried/proj-cmd"
 keywords = ["project", "organization"]
 categories = ["command-line-utilities"]
 

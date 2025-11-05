@@ -1,5 +1,5 @@
 # proj-cmd initializaton for bash and zsh
-proj() {
+name() {
   array=("goto" "create" "make")
 
   if [[ "${array[*]}" =~ $1 ]]; then

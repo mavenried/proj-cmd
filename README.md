@@ -1,6 +1,8 @@
-# proj-cmd
+<h1 align="center"> proj-cmd </h1>
 
-A simple project organizer written in rust using clap.
+<p align="center">
+A simple project organizer written in rust using clap. Divedes your projects into subgroups called projgrps which can have their own projects.
+</p>
 
 ## Installation
 
@@ -55,3 +57,51 @@ source ~/.proj.nu
 
 > By default, the init command generates a function named `proj`, you can pass in your own as `proj-cmd init <shell> my-cmd`
 
+---
+
+## Commands 
+
+### `goto`
+
+```zsh 
+proj goto <projgrp>
+proj goto <projgrp> <project>
+```
+Cd into a project or projgrp
+> cd into projgrp if project is omitted.
+
+### `make`
+```zsh
+proj make <projgrp>
+```
+Make a new projgrp
+> TODO: Add support for per projgrp initialization scripts to handle things like git and cargo init
+
+### `create`
+```zsh 
+proj create <projgrp> <project>
+```
+Create a new project in specified projgrp
+> TODO: Should make the directory and execute the initialization scripts
+### `list`
+```zsh 
+proj list
+proj list <projgrp>
+```
+List all proj groups or projects in specified proj group
+
+### `setup`
+```zsh 
+proj setup
+proj setup <proj_homepath>
+```
+Set or get the home path
+
+### `zip`
+```zsh 
+proj zip <projgrp>
+proj zip <projgrp> <project>
+```
+Compress a project or proj group into a zip file
+
+---

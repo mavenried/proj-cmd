@@ -3,8 +3,8 @@ use dirs::config_dir;
 use std::fs::{self, File};
 use std::io::Write;
 use std::path::Path;
-use std::process::exit;
 use std::process::Command;
+use std::process::{exit, Stdio};
 
 fn get_dir_contents(path: &str) -> Result<Vec<String>, std::io::Error> {
     let path = Path::new(path);
@@ -130,7 +130,7 @@ pub fn handle_list(projpath: String, list: ListProj) {
             println!("{bot}");
         }
         Err(_e) => {
-            println!("Error: Proj group or project does not exist");
+            eprintln!("proj-cmd: list: Proj group or project does not exist");
             exit(1)
         }
     }
@@ -142,7 +142,7 @@ pub fn handle_make(projpath: String, make: CreateNewProjGroup) {
     match fs::create_dir_all(&path) {
         Ok(_) => (),
         Err(e) => {
-            println!("Error: {e}");
+            eprintln!("proj-cmd: make: {e}");
             exit(1);
         }
     }
@@ -155,19 +155,27 @@ pub fn handle_create(projpath: String, make: CreateNewProject) {
     let name_of_project = make.project_name;
     let path = Path::new(&projpath).join(&proj_group_name);
     if !path.exists() {
-        println!("Error: No such proj group {proj_group_name} ");
+        eprintln!("proj-cmd: create: No such proj group `{proj_group_name}`");
         exit(1)
     }
-    let path = path.join(&name_of_project);
-    match fs::create_dir(&path) {
+    let project_path = path.join(&name_of_project);
+    match fs::create_dir(&project_path) {
         Ok(_) => (),
         Err(e) => {
-            println!("Error: {e}");
+            eprintln!("proj_cmd: create: {e}");
             exit(1);
         }
     }
+    let script_path = path.join("proj-init");
+    if script_path.exists() {
+        let _ = Command::new(script_path)
+            .arg(&project_path)
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .status();
+    }
 
-    println!("x cd {path:?}");
+    println!("x cd {project_path:?}");
 }
 
 pub fn handle_setup(setup: SetupProj) {
@@ -181,7 +189,8 @@ pub fn handle_setup(setup: SetupProj) {
             let proj_home = proj_home.trim();
             println!("Current proj_home_path = {proj_home}");
         } else {
-            println!("proj_home has not been configured yet");
+            eprintln!("proj-cmd: setup: proj_home has not been configured yet");
+            exit(1);
         }
     } else {
         let proj_home = setup.proj_home_path.unwrap();
@@ -190,10 +199,10 @@ pub fn handle_setup(setup: SetupProj) {
         let mut file = File::create(path.join("projrc")).unwrap();
         match write!(file, "{}", proj_home.display()) {
             Ok(_) => {
-                print!("set proj_home to {proj_home:?}");
+                println!("set proj_home to `{proj_home:?}`");
             }
             Err(e) => {
-                println!("Error: {e}");
+                eprintln!("proj-cmd: setup: {e}");
                 exit(1);
             }
         }
@@ -227,7 +236,7 @@ pub fn handle_init(init: Shell) {
             )
         }
         _ => {
-            eprintln!("Error: Only zsh, bash, nu and fish are supported currently :( ");
+            eprintln!("proj-cmd: init: Only zsh, bash, nu and fish are supported :( ");
             exit(1)
         }
     }
@@ -249,7 +258,7 @@ pub fn handle_zip(projpath: String, zip: ZipProj) {
     );
 
     if !Path::new(&path_to_zip).exists() {
-        println!("Error: Proj group or project does not exist");
+        eprintln!("proj-cmd: zip: Proj group or project does not exist");
         exit(1);
     }
 
@@ -258,8 +267,6 @@ pub fn handle_zip(projpath: String, zip: ZipProj) {
         .arg("-qr")
         .arg(zip_name)
         .arg(path_to_zip)
-        .spawn()
-        .expect("failed to zip")
-        .wait();
+        .status();
     println!("Done :)");
 }

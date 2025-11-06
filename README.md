@@ -75,14 +75,12 @@ Cd into a project or projgrp
 proj make <projgrp>
 ```
 Make a new projgrp
-> TODO: Add support for per projgrp initialization scripts to handle things like git and cargo init
 
 ### `create`
 ```zsh 
 proj create <projgrp> <project>
 ```
 Create a new project in specified projgrp
-> TODO: Should make the directory and execute the initialization scripts
 ### `list`
 ```zsh 
 proj list
